@@ -29,7 +29,63 @@ func generate_maze():
 			current = stack.pop_back()
 		else:
 			break
-	return grid
+	
+	var maze: Maze = Maze.new()
+	maze.grid = grid
+	maze.end_pos = find_farthest_cell(Vector2(1, 1))
+	return maze
+	
+func find_farthest_cell(start: Vector2) -> Vector2:
+	var visited = {}
+	var queue = []
+	var distances = {}
+	
+	queue.append(start)
+	visited[start] = true
+	distances[start] = 0
+	
+	var directions = [Vector2(0, -1), Vector2(1, 0), Vector2(0, 1), Vector2(-1, 0)]
+	var farthest = start
+	
+	while queue.size() > 0:
+		var current = queue.pop_front()
+		for dir in directions:
+			var next = current + dir
+			if !is_in_bounds(next):
+				continue
+			if visited.has(next):
+				continue
+			if has_wall_between(current, next):
+				continue
+			
+			visited[next] = true
+			distances[next] = distances[current] + 1
+			queue.append(next)
+			
+			if distances[next] > distances[farthest]:
+				farthest = next
+	
+	return farthest
+
+func is_in_bounds(pos: Vector2) -> bool:
+	return pos.y >= 0 and pos.y < grid.size() and pos.x >= 0 and pos.x < grid[0].size()
+
+func has_wall_between(from: Vector2, to: Vector2) -> bool:
+	var dx = to.x - from.x
+	var dy = to.y - from.y
+	
+	if dx == 1:
+		return grid[from.y][from.x]["walls"]["E"] or grid[to.y][to.x]["walls"]["W"]
+	elif dx == -1:
+		return grid[from.y][from.x]["walls"]["W"] or grid[to.y][to.x]["walls"]["E"]
+	elif dy == 1:
+		return grid[from.y][from.x]["walls"]["S"] or grid[to.y][to.x]["walls"]["N"]
+	elif dy == -1:
+		return grid[from.y][from.x]["walls"]["N"] or grid[to.y][to.x]["walls"]["S"]
+	
+	return true  # not adjacent or invalid move
+
+
 
 func get_unvisited_neighbors(pos):
 	var neighbors = []
